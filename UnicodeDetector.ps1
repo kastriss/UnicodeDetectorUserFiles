@@ -1,4 +1,4 @@
-# 1. Define where to search (focused on user folders for speed)
+# Searching User Files
 $TargetPaths = @(
     "$env:USERPROFILE\Desktop",
     "$env:USERPROFILE\Downloads",
@@ -8,25 +8,25 @@ $TargetPaths = @(
     "C:\Users\Public"
 )
 
-Write-Host "[*] Scanning for .exe/.dll files with Unicode anywhere in their path & verifying signatures..." -ForegroundColor Cyan
+Write-Host "[*] Scanning for .exe and .dll files with Unicode anywhere in their path & verifying signatures..." -ForegroundColor Cyan
 $FoundCount = 0
 
 foreach ($Path in $TargetPaths) {
     if (-not (Test-Path $Path)) { continue }
 
-    # Find all .exe and .dll files
+    # Find the Exes and Dlls
     $Files = Get-ChildItem -Path $Path -Recurse -File -Include *.exe, *.dll -ErrorAction SilentlyContinue
 
     foreach ($File in $Files) {
-        # Check if the FULL PATH contains any character outside standard printable ASCII
+        # Check the files for Unicode
         if ($File.FullName -match '[^\x20-\x7E]') {
             $FoundCount++
             
-            # Check the digital signature of the file
+            # Check the signature of the file
             $Signature = Get-AuthenticodeSignature -FilePath $File.FullName -ErrorAction SilentlyContinue
             $SigStatus = $Signature.Status
             
-            # Determine color and text based on signature status
+            # Make it pretty
             if ($SigStatus -eq "Valid") {
                 $SigColor = "Green"
                 $SigText = "SIGNED (Valid) - Publisher: $($Signature.SignerCertificate.Subject)"
@@ -36,7 +36,7 @@ foreach ($Path in $TargetPaths) {
                 $SigText = "UNSIGNED ($SigStatus)" 
             }
 
-            # Output the results cleanly on screen
+            # Make the output pretty
             Write-Host "[!] Found Unicode in Path!" -ForegroundColor Yellow
             Write-Host "    File Name: $($File.Name)" -ForegroundColor White
             Write-Host "    Full Path: $($File.FullName)" -ForegroundColor Gray
