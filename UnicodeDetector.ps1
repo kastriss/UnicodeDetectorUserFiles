@@ -7,9 +7,6 @@ $TargetPaths = @(
     "$env:USERPROFILE\AppData\Roaming",
     "C:\Users\Public"
 )
-# Credits (Cause I am the best)
-Write-Host "[*] Scan complete." -ForegroundColor Cyan
-Write-Host "Made with love by kastris_`n" -ForegroundColor Magenta
 
 Write-Host "[*] Scanning for .exe and .dll files with Unicode anywhere in their path & verifying signatures..." -ForegroundColor Cyan
 $FoundCount = 0
@@ -49,6 +46,9 @@ foreach ($Path in $TargetPaths) {
     }
 }
 
+# Credits (Cause I am the best)
+Write-Host "[*] Scan complete." -ForegroundColor Cyan
+Write-Host "Made with love by kastris_`n" -ForegroundColor Magenta
 
 if ($FoundCount -eq 0) {
     Write-Host "[+] Clean! No .exe or .dll file paths contain Unicode characters." -ForegroundColor Green
