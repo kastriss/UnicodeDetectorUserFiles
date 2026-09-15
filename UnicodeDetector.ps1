@@ -1,4 +1,4 @@
-# Searching User Files
+# 1. Define where to search
 $TargetPaths = @(
     "$env:USERPROFILE\Desktop",
     "$env:USERPROFILE\Downloads",
@@ -8,21 +8,21 @@ $TargetPaths = @(
     "C:\Users\Public"
 )
 
-Write-Host "[*] Scanning for .exe and .dll files with Unicode anywhere in their path & verifying signatures..." -ForegroundColor Cyan
+Write-Host "[*] Scanning for .exe/.dll files with Unicode anywhere in their path & verifying signatures..." -ForegroundColor Cyan
 $FoundCount = 0
 
 foreach ($Path in $TargetPaths) {
     if (-not (Test-Path $Path)) { continue }
 
-    # Find the Exes and Dlls
-    $Files = Get-ChildItem -Path $Path -Recurse -File -Include *.exe, *.dll -ErrorAction SilentlyContinue
+    # Find all .exe and .dll files
+    $Files = Get-ChildItem -Path $Path -Recurse -File -Include *.exe, *.dll -Force -ErrorAction SilentlyContinue
 
     foreach ($File in $Files) {
-        # Check the files for Unicode
+        # Check if the FULL PATH contains any character outside standard printable ASCII
         if ($File.FullName -match '[^\x20-\x7E]') {
             $FoundCount++
             
-            # Check the signature of the file
+            # Check the digital signature of the file
             $Signature = Get-AuthenticodeSignature -FilePath $File.FullName -ErrorAction SilentlyContinue
             $SigStatus = $Signature.Status
             
@@ -36,11 +36,16 @@ foreach ($Path in $TargetPaths) {
                 $SigText = "UNSIGNED ($SigStatus)" 
             }
 
-            # Make the output pretty
+            # Output
             Write-Host "[!] Found Unicode in Path!" -ForegroundColor Yellow
             Write-Host "    File Name: $($File.Name)" -ForegroundColor White
             Write-Host "    Full Path: $($File.FullName)" -ForegroundColor Gray
             Write-Host "    Signature: $SigText" -ForegroundColor $SigColor
+            
+            # Visual flag if the file is hidden
+            if ($File.Attributes -match "Hidden") {
+                Write-Host "    Attributes:  HIDDEN FILE" -ForegroundColor DarkYellow
+            }
             Write-Host ""
         }
     }
